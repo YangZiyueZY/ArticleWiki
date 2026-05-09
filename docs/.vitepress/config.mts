@@ -2,10 +2,11 @@ import { defineConfig } from 'vitepress'
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
+  base: '/ArticleWiki/',
   title: "议论文人物素材库",
   description: "专注于议论文人物素材收集、整理和检索的文档系统",
   head: [
-    ['link', { rel: 'icon', href: '/icon/favicon.svg' }],
+    ['link', { rel: 'icon', href: '/ArticleWiki/icon/favicon.svg' }],
   ],
   markdown: {
     lineNumbers: true,
@@ -50,7 +51,7 @@ export default defineConfig({
       copyright: 'Copyright © 2026 ArticleWiki'
     },
     editLink: {
-      pattern: 'https://github.com/user/ArticleWiki/edit/main/docs/:path',
+      pattern: 'https://github.com/YangZiyueZY/ArticleWiki/edit/main/docs/:path',
       text: '在 GitHub 上编辑此页'
     },
     docFooter: {
@@ -66,7 +67,7 @@ export default defineConfig({
       provider: 'local'
     },
     socialLinks: [
-      { icon: 'github', link: 'https://github.com/user/ArticleWiki' },
+      { icon: 'github', link: 'https://github.com/YangZiyueZY/ArticleWiki' },
     ]
   }
 })
