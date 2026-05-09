@@ -34,11 +34,11 @@ function getMaterialsSidebar(baseDir: string, categoryPath: string) {
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
-  base: '/ArticleWiki/',
+  base: '/',
   title: "议论文人物素材库",
   description: "专注于议论文人物素材收集、整理和检索的文档系统",
   head: [
-    ['link', { rel: 'icon', href: '/ArticleWiki/icon/favicon.svg' }],
+    ['link', { rel: 'icon', href: '/icon/favicon.svg' }],
   ],
   markdown: {
     lineNumbers: true,

@@ -44,7 +44,7 @@ features:
 ---
 
 <div style="text-align: center; margin-top: 2rem;">
-  <a href="/ArticleWiki/materials/人物素材/" style="display: inline-block; padding: 0.75rem 1.5rem; font-size: 1rem; font-weight: 500; color: var(--vp-c-brand); border: 1px solid var(--vp-c-brand); border-radius: 8px; text-decoration: none;">
+  <a href="/materials/人物素材/" style="display: inline-block; padding: 0.75rem 1.5rem; font-size: 1rem; font-weight: 500; color: var(--vp-c-brand); border: 1px solid var(--vp-c-brand); border-radius: 8px; text-decoration: none;">
     查看更多人物素材 →
   </a>
 </div>
