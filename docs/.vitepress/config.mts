@@ -1,4 +1,36 @@
 import { defineConfig } from 'vitepress'
+import fs from 'node:fs'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+
+function getMaterialsSidebar(baseDir: string, categoryPath: string) {
+  const absDir = path.resolve(__dirname, '..', baseDir, categoryPath)
+  let files: string[] = []
+  try {
+    files = fs.readdirSync(absDir)
+      .filter(f => f.endsWith('.md') && f !== 'index.md')
+      .sort((a, b) => a.localeCompare(b, 'zh-CN'))
+  } catch {
+    files = []
+  }
+
+  const prefix = `/${baseDir}/${categoryPath}/`
+
+  return [
+    {
+      text: '人物素材',
+      items: [
+        { text: '人物素材首页', link: `${prefix}` },
+        ...files.map(f => ({
+          text: f.replace('.md', ''),
+          link: `${prefix}${f.replace('.md', '')}`,
+        })),
+      ],
+    },
+  ]
+}
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
@@ -22,22 +54,7 @@ export default defineConfig({
       { text: "上传素材", link: "/upload" },
     ],
     sidebar: {
-      '/materials/人物素材/': [
-        {
-          text: '人物素材',
-          items: [
-            { text: '人物素材首页', link: '/materials/人物素材/' },
-            { text: '中村修二', link: '/materials/人物素材/中村修二' },
-            { text: '威廉·勒梅修里尔', link: '/materials/人物素材/威廉·勒梅修里尔' },
-            { text: '弗雷德里克·图多·戈里', link: '/materials/人物素材/弗雷德里克·图多·戈里' },
-            { text: '梁文峰', link: '/materials/人物素材/梁文峰' },
-            { text: 'Paper2Gal开发者', link: '/materials/人物素材/Paper2Gal开发者' },
-            { text: '泰奥·杨森', link: '/materials/人物素材/泰奥·杨森' },
-            { text: '马丁·路德·金', link: '/materials/人物素材/马丁·路德·金' },
-            { text: '马科长', link: '/materials/人物素材/马科长' },
-          ]
-        }
-      ],
+      '/materials/人物素材/': getMaterialsSidebar('materials', '人物素材'),
       '/materials/': [
         {
           text: '素材库',

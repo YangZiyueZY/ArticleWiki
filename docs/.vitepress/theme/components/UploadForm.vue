@@ -20,10 +20,25 @@ const tags = ref('')
 const content = ref('')
 const source = ref('')
 const submitting = ref(false)
-const result = ref<{ type: 'success' | 'error'; message: string } | null>(null)
+const result = ref<{ type: 'success' | 'error'; message: string; prUrl?: string } | null>(null)
 
 const REPO_OWNER = 'YangZiyueZY'
 const REPO_NAME = 'ArticleWiki'
+
+function getUsername(): string {
+  try {
+    const data = localStorage.getItem('github_user')
+    if (data) {
+      const user = JSON.parse(data)
+      return user.login || 'unknown'
+    }
+  } catch { /* ignore */ }
+  return 'unknown'
+}
+
+function getUserBranch(): string {
+  return `${getUsername()}_update`
+}
 
 function formatFileName(title: string): string {
   return title.trim().replace(/[/\\?%*:|"<>]/g, '').replace(/\s+/g, '')
@@ -50,6 +65,72 @@ function buildMarkdown(): string {
   return lines.join('\n')
 }
 
+async function apiFetch(url: string, options?: RequestInit) {
+  const res = await fetch(url, {
+    ...options,
+    headers: {
+      Authorization: `Bearer ${props.token}`,
+      Accept: 'application/vnd.github.v3+json',
+      'Content-Type': 'application/json',
+      ...(options?.headers as Record<string, string>),
+    },
+  })
+  const data = await res.json()
+  if (!res.ok) {
+    throw new Error(data.message || `请求失败 (${res.status})`)
+  }
+  return data
+}
+
+async function ensureBranch(): Promise<string> {
+  const branch = getUserBranch()
+  try {
+    const ref = await apiFetch(
+      `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/git/ref/heads/${branch}`
+    )
+    return ref.object.sha
+  } catch {
+    const main = await apiFetch(
+      `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/git/ref/heads/main`
+    )
+    await apiFetch(
+      `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/git/refs`,
+      {
+        method: 'POST',
+        body: JSON.stringify({
+          ref: `refs/heads/${branch}`,
+          sha: main.object.sha,
+        }),
+      }
+    )
+    return main.object.sha
+  }
+}
+
+async function getExistingFileSha(filePath: string): Promise<string | null> {
+  try {
+    const data = await apiFetch(
+      `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${filePath}?ref=${getUserBranch()}`
+    )
+    return data.sha || null
+  } catch {
+    return null
+  }
+}
+
+async function findExistingPr(): Promise<{ number: number; html_url: string } | null> {
+  const branch = getUserBranch()
+  try {
+    const pulls = await apiFetch(
+      `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/pulls?head=${REPO_OWNER}:${branch}&base=main&state=open`
+    )
+    if (Array.isArray(pulls) && pulls.length > 0) {
+      return { number: pulls[0].number, html_url: pulls[0].html_url }
+    }
+  } catch { /* ignore */ }
+  return null
+}
+
 async function submit() {
   if (!title.value.trim()) {
     result.value = { type: 'error', message: '请输入素材标题' }
@@ -66,73 +147,63 @@ async function submit() {
   const fileName = formatFileName(title.value)
   const filePath = `docs/materials/${category.value}/${fileName}.md`
   const fileContent = buildMarkdown()
-  const branchName = `upload/${fileName}-${Date.now()}`
 
   try {
-    const headers = {
-      Authorization: `Bearer ${props.token}`,
-      Accept: 'application/vnd.github.v3+json',
-      'Content-Type': 'application/json',
+    // 1. Ensure the shared upload branch exists
+    await ensureBranch()
+
+    // 2. Check if file already exists (for SHA-based update)
+    const existingSha = await getExistingFileSha(filePath)
+
+    // 3. Create or update the file on the shared branch
+    const body: Record<string, unknown> = {
+      message: `上传素材: ${title.value}`,
+      content: btoa(unescape(encodeURIComponent(fileContent))),
+      branch: getUserBranch(),
+    }
+    if (existingSha) {
+      body.sha = existingSha
     }
 
-    // 1. Get the default branch reference SHA
-    const refRes = await fetch(
-      `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/git/ref/heads/main`,
-      { headers }
-    )
-    if (!refRes.ok) throw new Error('获取仓库信息失败')
-    const refData = await refRes.json()
-    const mainSha = refData.object.sha
-
-    // 2. Create a new branch
-    const branchRes = await fetch(
-      `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/git/refs`,
-      {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({
-          ref: `refs/heads/${branchName}`,
-          sha: mainSha,
-        }),
-      }
-    )
-    if (!branchRes.ok) throw new Error('创建分支失败')
-
-    // 3. Create the file on the new branch
-    const createRes = await fetch(
+    await apiFetch(
       `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${filePath}`,
       {
         method: 'PUT',
-        headers,
-        body: JSON.stringify({
-          message: `上传素材: ${title.value}`,
-          content: btoa(unescape(encodeURIComponent(fileContent))),
-          branch: branchName,
-        }),
+        body: JSON.stringify(body),
       }
     )
-    if (!createRes.ok) throw new Error('创建素材文件失败')
 
-    // 4. Create a Pull Request
-    const prRes = await fetch(
-      `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/pulls`,
-      {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({
-          title: `上传素材: ${title.value}`,
-          head: branchName,
-          base: 'main',
-          body: `## 素材信息\n\n- **标题**: ${title.value}\n- **分类**: ${category.value}\n- **标签**: ${tags.value || '无'}\n- **来源**: ${source.value || '未注明'}\n\n由 [${JSON.parse(localStorage.getItem('github_user') || '{}').login || '用户'}] 通过在线表单提交。`,
-        }),
+    // 4. Check for existing open PR; create one only if none exists
+    const existingPr = await findExistingPr()
+
+    let prUrl: string
+    if (existingPr) {
+      prUrl = existingPr.html_url
+      result.value = {
+        type: 'success',
+        message: `素材已提交到你的 Pull Request #${existingPr.number}！你所有上传的素材都集中在此 PR 中。`,
+        prUrl,
       }
-    )
-    if (!prRes.ok) throw new Error('创建 Pull Request 失败')
-    const prData = await prRes.json()
-
-    result.value = {
-      type: 'success',
-      message: `素材提交成功！已创建 Pull Request #${prData.number}。`,
+    } else {
+      const user = JSON.parse(localStorage.getItem('github_user') || '{}')
+      const pr = await apiFetch(
+        `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/pulls`,
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            title: `素材投稿: ${title.value}`,
+            head: getUserBranch(),
+            base: 'main',
+            body: `## 素材投稿\n\n- **标题**: ${title.value}\n- **分类**: ${category.value}\n- **标签**: ${tags.value || '无'}\n- **来源**: ${source.value || '未注明'}\n\n由 @${user.login || '用户'} 通过在线表单提交。\n\n> 此 PR 包含该用户的所有投稿，合并后可创建新的 PR 继续投稿。`,
+          }),
+        }
+      )
+      prUrl = pr.html_url
+      result.value = {
+        type: 'success',
+        message: `素材提交成功！已创建 Pull Request #${pr.number}，后续你的所有上传都会追加到此 PR 中。`,
+        prUrl,
+      }
     }
 
     // Reset form
@@ -213,7 +284,7 @@ async function submit() {
 
     <div v-if="result" :class="['result-msg', result.type]">
       {{ result.message }}
-      <a v-if="result.type === 'success'" :href="`https://github.com/${REPO_OWNER}/${REPO_NAME}/pulls`" target="_blank" rel="noopener">
+      <a v-if="result.prUrl" :href="result.prUrl" target="_blank" rel="noopener">
         查看 Pull Request
       </a>
     </div>
