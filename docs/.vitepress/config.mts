@@ -34,7 +34,7 @@ function getMaterialsSidebar(baseDir: string, categoryPath: string) {
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
-  base: '/',
+  base: process.env.BASE_URL || '/',
   title: "议论文人物素材库",
   description: "专注于议论文人物素材收集、整理和检索的文档系统",
   head: [

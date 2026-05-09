@@ -26,13 +26,12 @@ jobs:
         with:
           node-version: 22
 
-      - name: Enable Corepack for Yarn 4
-        run: corepack enable
-
       - name: Install dependencies
         run: yarn install --frozen-lockfile
 
       - name: Build VitePress site
+        env:
+          BASE_URL: /ArticleWiki/
         run: yarn docs:build
 
       - name: Upload artifact
