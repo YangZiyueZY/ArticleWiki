@@ -19,6 +19,7 @@ export default defineConfig({
     nav: [
       { text: "首页", link: "/" },
       { text: "人物素材", link: "/materials/人物素材/" },
+      { text: "上传素材", link: "/upload" },
     ],
     sidebar: {
       '/materials/人物素材/': [
