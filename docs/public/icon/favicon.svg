@@ -1,40 +1,51 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
   <defs>
-    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#4f46e5;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#7c3aed;stop-opacity:1" />
-    </linearGradient>
-    <linearGradient id="accentGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#60a5fa;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#a78bfa;stop-opacity:1" />
-    </linearGradient>
-    <filter id="shadow" x="-10%" y="-10%" width="130%" height="130%">
-      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#4f46e5" flood-opacity="0.25"/>
-    </filter>
+    <style>
+      .bg-circle { fill: #4f46e5; }
+      .book-spine { fill: #4f46e5; }
+      .book-page { fill: #ffffff; stroke: #4f46e5; }
+      .quill-feather { fill: none; stroke: #4f46e5; }
+      .quill-tip { fill: #4f46e5; }
+      .quill-line { stroke: #4f46e5; }
+      .star { fill: #f59e0b; }
+
+      @media (prefers-color-scheme: dark) {
+        .bg-circle { fill: #818cf8; }
+        .book-spine { fill: #a5b4fc; }
+        .book-page { fill: #1e1e2e; stroke: #a5b4fc; }
+        .quill-feather { stroke: #a5b4fc; }
+        .quill-tip { fill: #a5b4fc; }
+        .quill-line { stroke: #a5b4fc; }
+        .star { fill: #fbbf24; }
+      }
+    </style>
   </defs>
 
-  <!-- Background circle -->
-  <circle cx="50" cy="50" r="46" fill="url(#bgGrad)" opacity="0.1"/>
-  <circle cx="50" cy="50" r="42" fill="none" stroke="url(#bgGrad)" stroke-width="2" opacity="0.3"/>
+  <!-- Book shape -->
+  <path class="book-page" stroke-width="2.5" stroke-linejoin="round" d="M22 25 L50 20 L78 25 L78 78 L50 85 L22 78 Z" />
+  <path class="book-spine" d="M50 20 L50 85" stroke-width="3" stroke-linecap="round" />
 
-  <!-- Document/Paper base -->
-  <rect x="22" y="18" width="44" height="56" rx="6" ry="6" fill="white" stroke="url(#bgGrad)" stroke-width="2.5" filter="url(#shadow)"/>
+  <!-- Book left page text lines -->
+  <line class="quill-line" x1="30" y1="40" x2="46" y2="37" stroke-width="2.2" stroke-linecap="round" />
+  <line class="quill-line" x1="30" y1="49" x2="46" y2="46" stroke-width="2.2" stroke-linecap="round" opacity="0.6" />
+  <line class="quill-line" x1="30" y1="58" x2="43" y2="55" stroke-width="2.2" stroke-linecap="round" opacity="0.3" />
 
-  <!-- Document lines -->
-  <line x1="30" y1="32" x2="58" y2="32" stroke="#c7d2fe" stroke-width="2.5" stroke-linecap="round"/>
-  <line x1="30" y1="42" x2="54" y2="42" stroke="#e0e7ff" stroke-width="2.5" stroke-linecap="round"/>
-  <line x1="30" y1="52" x2="56" y2="52" stroke="#e0e7ff" stroke-width="2.5" stroke-linecap="round"/>
-  <line x1="30" y1="62" x2="50" y2="62" stroke="#e0e7ff" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- Book right page text lines -->
+  <line class="quill-line" x1="54" y1="37" x2="70" y2="40" stroke-width="2.2" stroke-linecap="round" />
+  <line class="quill-line" x1="54" y1="46" x2="70" y2="49" stroke-width="2.2" stroke-linecap="round" opacity="0.6" />
+  <line class="quill-line" x1="54" y1="55" x2="67" y2="58" stroke-width="2.2" stroke-linecap="round" opacity="0.3" />
 
-  <!-- Pen body -->
-  <rect x="58" y="14" width="10" height="52" rx="5" ry="5" fill="url(#accentGrad)" transform="rotate(25 63 40)" filter="url(#shadow)"/>
+  <!-- Quill feather -->
+  <path class="quill-feather" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" d="M50 85 C55 78 68 62 72 42 C74 32 70 22 62 16 C68 22 70 32 68 42 C64 58 66 70 62 80" />
+  <path class="quill-feather" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M50 85 C62 75 75 58 72 42" opacity="0.4" />
+  <path class="quill-feather" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M50 85 C58 78 68 64 64 48" opacity="0.3" />
+  <path class="quill-feather" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M50 85 C55 80 62 70 60 56" opacity="0.2" />
 
-  <!-- Pen tip -->
-  <path d="M68.5 58 L73.5 72 L63.5 72 Z" fill="url(#bgGrad)" transform="rotate(25 68.5 65)"/>
+  <!-- Quill nib -->
+  <path class="quill-tip" d="M50 85 L56 96 L50 100 L44 96 Z" />
 
-  <!-- Pen clip -->
-  <rect x="60" y="22" width="3" height="18" rx="1.5" ry="1.5" fill="white" opacity="0.6" transform="rotate(25 61.5 31)"/>
-
-  <!-- Writing dot (ink) -->
-  <circle cx="72" cy="74" r="3" fill="#4f46e5" opacity="0.8"/>
+  <!-- Accent dots -->
+  <circle class="star" cx="82" cy="22" r="3" opacity="0.7" />
+  <circle class="star" cx="18" cy="18" r="2" opacity="0.4" />
+  <circle class="star" cx="85" cy="76" r="2" opacity="0.4" />
 </svg>
